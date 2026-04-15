@@ -64,41 +64,30 @@ public class AdminUserService {
         return toVo(adminUserMapper.findById(entity.getId()));
     }
 
-    public UserVO update(LoginUser operator, Long id, UpdateAdminUserRequest request) {
-        ensureExists(id);
-        adminUserMapper.updateNickname(id, request.getNickname(), operator.getUserId(), resolveOperatorName(operator));
-        return toVo(adminUserMapper.findById(id));
+    public UserVO update(LoginUser operator, UpdateAdminUserRequest request) {
+        ensureExists(request.getId());
+        adminUserMapper.updateNickname(request.getId(), request.getNickname(), operator.getUserId(), resolveOperatorName(operator));
+        return toVo(adminUserMapper.findById(request.getId()));
     }
 
-    public UserVO update(LoginUser operator, UpdateAdminUserRequest request) {
-        return update(operator, request.getId(), request);
-    }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateEnabled(LoginUser operator, Long id, UpdateUserEnabledRequest request) {
-        AdminUserEntity user = requireExistingUser(id);
+    public void updateEnabled(LoginUser operator, UpdateUserEnabledRequest request) {
+        AdminUserEntity user = requireExistingUser(request.getId());
         if (Boolean.FALSE.equals(request.getEnabled()) && Boolean.TRUE.equals(user.getSuperAdmin())) {
             throw new BizException("超级管理员不允许禁用");
         }
-        adminUserMapper.updateEnabled(id, request.getEnabled(), operator.getUserId(), resolveOperatorName(operator));
+        adminUserMapper.updateEnabled(request.getId(), request.getEnabled(), operator.getUserId(), resolveOperatorName(operator));
         if (Boolean.FALSE.equals(request.getEnabled())) {
-            userSessionService.revokeUserSessions(ActorType.ADMIN, id);
+            userSessionService.revokeUserSessions(ActorType.ADMIN, request.getId());
         }
     }
 
-    public void updateEnabled(LoginUser operator, UpdateUserEnabledRequest request) {
-        updateEnabled(operator, request.getId(), request);
-    }
-
-    public void resetPassword(LoginUser operator, Long id, ResetPasswordRequest request) {
-        ensureExists(id);
-        String plainPassword = decodeAndValidatePassword(request.getEncryptedPassword());
-        adminUserMapper.updatePassword(id, passwordEncoder.encode(plainPassword),
-                operator.getUserId(), resolveOperatorName(operator));
-    }
-
     public void resetPassword(LoginUser operator, ResetPasswordRequest request) {
-        resetPassword(operator, request.getId(), request);
+        ensureExists(request.getId());
+        String plainPassword = decodeAndValidatePassword(request.getEncryptedPassword());
+        adminUserMapper.updatePassword(request.getId(), passwordEncoder.encode(plainPassword),
+                operator.getUserId(), resolveOperatorName(operator));
     }
 
     private void ensureExists(Long id) {

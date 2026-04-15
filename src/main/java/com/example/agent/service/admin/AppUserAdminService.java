@@ -66,44 +66,38 @@ public class AppUserAdminService {
         return toVo(appUserMapper.findById(entity.getId()));
     }
 
-    public UserVO update(LoginUser operator, Long id, UpdateAppUserRequest request) {
-        ensureExists(id);
-        appUserMapper.updateNickname(id, request.getNickname(), operator.getUserId(), resolveOperatorName(operator));
-        return toVo(appUserMapper.findById(id));
-    }
-
     public UserVO update(LoginUser operator, UpdateAppUserRequest request) {
-        return update(operator, request.getId(), request);
+        ensureExists(request.getId());
+        appUserMapper.updateNickname(request.getId(), request.getNickname(), operator.getUserId(), resolveOperatorName(operator));
+        return toVo(appUserMapper.findById(request.getId()));
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateEnabled(LoginUser operator, Long id, UpdateUserEnabledRequest request) {
-        ensureExists(id);
-        appUserMapper.updateEnabled(id, request.getEnabled(), operator.getUserId(), resolveOperatorName(operator));
-        if (Boolean.FALSE.equals(request.getEnabled())) {
-            userSessionService.revokeUserSessions(ActorType.APP, id);
-        }
-    }
-
     public void updateEnabled(LoginUser operator, UpdateUserEnabledRequest request) {
-        updateEnabled(operator, request.getId(), request);
-    }
-
-    public void resetPassword(LoginUser operator, Long id, ResetPasswordRequest request) {
-        ensureExists(id);
-        String plainPassword = decodeAndValidatePassword(request.getEncryptedPassword());
-        appUserMapper.updatePassword(id, passwordEncoder.encode(plainPassword),
-                operator.getUserId(), resolveOperatorName(operator));
+        ensureExists(request.getId());
+        appUserMapper.updateEnabled(request.getId(), request.getEnabled(), operator.getUserId(), resolveOperatorName(operator));
+        if (Boolean.FALSE.equals(request.getEnabled())) {
+            userSessionService.revokeUserSessions(ActorType.APP, request.getId());
+        }
     }
 
     public void resetPassword(LoginUser operator, ResetPasswordRequest request) {
-        resetPassword(operator, request.getId(), request);
+        ensureExists(request.getId());
+        String plainPassword = decodeAndValidatePassword(request.getEncryptedPassword());
+        appUserMapper.updatePassword(request.getId(), passwordEncoder.encode(plainPassword),
+                operator.getUserId(), resolveOperatorName(operator));
     }
 
     private void ensureExists(Long id) {
-        if (appUserMapper.findById(id) == null) {
+        requireExistingUser(id);
+    }
+
+    private AppUserEntity requireExistingUser(Long id) {
+        AppUserEntity entity = appUserMapper.findById(id);
+        if (entity == null) {
             throw new BizException("前端客户不存在");
         }
+        return entity;
     }
 
     private UserVO toVo(AppUserEntity entity) {
