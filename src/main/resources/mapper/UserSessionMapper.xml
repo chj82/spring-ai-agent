@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.agent.mapper.UserSessionMapper">
+
+    <resultMap id="UserSessionResultMap" type="com.example.agent.model.entity.UserSessionEntity">
+        <id property="id" column="id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="actorType" column="actor_type"/>
+        <result property="userId" column="user_id"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="lastActiveAt" column="last_active_at"/>
+        <result property="revoked" column="revoked"/>
+        <result property="deleted" column="deleted"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.agent.model.entity.UserSessionEntity" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_user_session(session_id, actor_type, user_id, expires_at, last_active_at, revoked, deleted, created_at, updated_at)
+        values(#{sessionId}, #{actorType}, #{userId}, #{expiresAt}, #{lastActiveAt}, #{revoked}, #{deleted}, now(), now())
+    </insert>
+
+    <select id="findBySessionId" resultMap="UserSessionResultMap">
+        select * from sys_user_session where session_id = #{sessionId} and deleted = 0 limit 1
+    </select>
+
+    <update id="revokeBySessionId">
+        update sys_user_session
+        set revoked = 1,
+            updated_at = now()
+        where session_id = #{sessionId} and revoked = 0 and deleted = 0
+    </update>
+
+    <update id="revokeByActorAndUserId">
+        update sys_user_session
+        set revoked = 1,
+            updated_at = now()
+        where actor_type = #{actorType}
+          and user_id = #{userId}
+          and revoked = 0
+          and deleted = 0
+    </update>
+
+    <update id="updateActivity">
+        update sys_user_session
+        set last_active_at = #{lastActiveAt},
+            updated_at = now()
+        where session_id = #{sessionId} and revoked = 0 and deleted = 0
+    </update>
+
+    <update id="renewActivity">
+        update sys_user_session
+        set last_active_at = #{lastActiveAt},
+            expires_at = #{expiresAt},
+            updated_at = now()
+        where session_id = #{sessionId} and revoked = 0 and deleted = 0
+    </update>
+
+</mapper>

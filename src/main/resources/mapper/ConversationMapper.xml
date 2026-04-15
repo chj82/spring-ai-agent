@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.agent.mapper.ConversationMapper">
+
+    <resultMap id="ConversationResultMap" type="com.example.agent.model.entity.ConversationEntity">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="title" column="title"/>
+        <result property="messageCount" column="message_count"/>
+        <result property="lastMessageAt" column="last_message_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.agent.model.entity.ConversationEntity" useGeneratedKeys="true" keyProperty="id">
+        insert into ai_conversation(user_id, title, message_count, last_message_at, deleted, created_at, updated_at)
+        values(#{userId}, #{title}, #{messageCount}, #{lastMessageAt}, #{deleted}, now(), now())
+    </insert>
+
+    <select id="findByIdAndUserId" resultMap="ConversationResultMap">
+        select * from ai_conversation
+        where id = #{id} and user_id = #{userId} and deleted = 0
+        limit 1
+    </select>
+
+    <select id="findByUserId" resultMap="ConversationResultMap">
+        select * from ai_conversation
+        where user_id = #{userId} and deleted = 0
+        order by
+        case when last_message_at is null then 1 else 0 end asc,
+        last_message_at desc,
+        id desc
+    </select>
+
+    <update id="updateTitle">
+        update ai_conversation
+        set title = #{title},
+            updated_at = now()
+        where id = #{id} and user_id = #{userId} and deleted = 0
+    </update>
+
+    <update id="softDelete">
+        update ai_conversation
+        set deleted = 1,
+            updated_at = now()
+        where id = #{id} and user_id = #{userId} and deleted = 0
+    </update>
+
+    <update id="updateStats">
+        update ai_conversation
+        set message_count = message_count + #{delta},
+            last_message_at = #{lastMessageAt},
+            updated_at = now()
+        where id = #{id} and user_id = #{userId} and deleted = 0
+    </update>
+
+</mapper>

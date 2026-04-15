@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: spring-ai-agent
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/spring_ai_agent?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 12345678
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  ai:
+    openai:
+      base-url: https://ark.cn-beijing.volces.com/api/v3
+      api-key: a4f71d70-e2e8-4f81-af02-ec6ab6f50dd4
+      chat:
+        options:
+          model: doubao-seed-1-8-251228
+          temperature: 0.7
+
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+app:
+  security:
+    token-validity-seconds: 86400
+    renew-threshold-seconds: 43200
+    admin-cookie-name: AI_AGENT_ADMIN_TOKEN
+    app-cookie-name: AI_AGENT_APP_TOKEN
+    cookie-secure: false
+    cookie-same-site: Lax
+    cookie-domain:
+    cors-max-age-seconds: 3600
+    allowed-origins:
+      - http://localhost:3000
+      - http://127.0.0.1:3000
+  chat:
+    memory-window-size: 20
+    default-system-prompt: 你是一个专业、友好、简洁的 AI 助手。请基于当前对话上下文回答用户问题。

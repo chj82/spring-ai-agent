@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.agent.mapper.ConversationMessageMapper">
+
+    <resultMap id="ConversationMessageResultMap" type="com.example.agent.model.entity.ConversationMessageEntity">
+        <id property="id" column="id"/>
+        <result property="conversationId" column="conversation_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="role" column="role"/>
+        <result property="content" column="content"/>
+        <result property="tokenUsage" column="token_usage"/>
+        <result property="status" column="status"/>
+        <result property="deleted" column="deleted"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.agent.model.entity.ConversationMessageEntity" useGeneratedKeys="true" keyProperty="id">
+        insert into ai_conversation_message(conversation_id, user_id, role, content, token_usage, status, deleted, created_at, updated_at)
+        values(#{conversationId}, #{userId}, #{role}, #{content}, #{tokenUsage}, #{status}, #{deleted}, now(), now())
+    </insert>
+
+    <select id="findByConversationId" resultMap="ConversationMessageResultMap">
+        select m.*
+        from ai_conversation_message m
+        inner join ai_conversation c on c.id = m.conversation_id
+        where m.conversation_id = #{conversationId} and c.user_id = #{userId} and c.deleted = 0 and m.deleted = 0
+        order by m.id asc
+    </select>
+
+    <select id="findRecentMessages" resultMap="ConversationMessageResultMap">
+        select m.*
+        from ai_conversation_message m
+        inner join ai_conversation c on c.id = m.conversation_id
+        where m.conversation_id = #{conversationId} and c.user_id = #{userId} and c.deleted = 0 and m.deleted = 0
+        order by m.id desc
+        limit #{limit}
+    </select>
+
+</mapper>

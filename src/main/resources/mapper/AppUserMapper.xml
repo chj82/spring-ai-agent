@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.agent.mapper.AppUserMapper">
+
+    <resultMap id="AppUserResultMap" type="com.example.agent.model.entity.AppUserEntity">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="nickname" column="nickname"/>
+        <result property="enabled" column="enabled"/>
+        <result property="lastLoginTime" column="last_login_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createByName" column="create_by_name"/>
+        <result property="updateByName" column="update_by_name"/>
+        <result property="deleted" column="deleted"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="AppUserResultMap">
+        select * from sys_app_user where username = #{username} and deleted = 0 limit 1
+    </select>
+
+    <select id="findById" resultMap="AppUserResultMap">
+        select * from sys_app_user where id = #{id} and deleted = 0 limit 1
+    </select>
+
+    <select id="findAll" resultMap="AppUserResultMap">
+        select * from sys_app_user where deleted = 0 order by id desc
+    </select>
+
+    <sql id="AppUserPageWhere">
+        <where>
+            <if test="query != null and query.keywordLike != null">
+                and (username like concat('%', #{query.keywordLike}, '%')
+                or nickname like concat('%', #{query.keywordLike}, '%'))
+            </if>
+            <if test="query != null and query.enabled != null">
+                and enabled = #{query.enabled}
+            </if>
+            <if test="query != null and query.createdFrom != null">
+                and created_at &gt;= #{query.createdFrom}
+            </if>
+            <if test="query != null and query.createdTo != null">
+                and created_at &lt;= #{query.createdTo}
+            </if>
+            and deleted = 0
+        </where>
+    </sql>
+
+    <select id="findPage" resultMap="AppUserResultMap">
+        select * from sys_app_user
+        <include refid="AppUserPageWhere"/>
+        order by id desc
+        limit #{page.pageSize} offset #{page.offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        select count(1) from sys_app_user
+        <include refid="AppUserPageWhere"/>
+    </select>
+
+    <insert id="insert" parameterType="com.example.agent.model.entity.AppUserEntity" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_app_user(username, password_hash, nickname, enabled, last_login_time,
+                                 create_by, update_by, create_by_name, update_by_name, deleted, created_at, updated_at)
+        values(#{username}, #{passwordHash}, #{nickname}, #{enabled}, #{lastLoginTime},
+               #{createBy}, #{updateBy}, #{createByName}, #{updateByName}, #{deleted}, now(), now())
+    </insert>
+
+    <update id="updateNickname">
+        update sys_app_user
+        set nickname = #{nickname},
+            update_by = #{updateBy},
+            update_by_name = #{updateByName},
+            updated_at = now()
+        where id = #{id} and deleted = 0
+    </update>
+
+    <update id="updateEnabled">
+        update sys_app_user
+        set enabled = #{enabled},
+            update_by = #{updateBy},
+            update_by_name = #{updateByName},
+            updated_at = now()
+        where id = #{id} and deleted = 0
+    </update>
+
+    <update id="updatePassword">
+        update sys_app_user
+        set password_hash = #{passwordHash},
+            update_by = #{updateBy},
+            update_by_name = #{updateByName},
+            updated_at = now()
+        where id = #{id} and deleted = 0
+    </update>
+
+    <update id="updateLastLoginTime">
+        update sys_app_user
+        set last_login_time = #{lastLoginTime},
+            updated_at = now()
+        where id = #{id} and deleted = 0
+    </update>
+
+</mapper>
