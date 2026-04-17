@@ -1,6 +1,23 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
+export type ApiResponse<T> = {
+  code: number;
+  message: string;
+  data: T;
+};
+
+export class ApiError extends Error {
+  code: number;
+  status: number;
+
+  constructor(message: string, code: number, status: number) {
+    super(message);
+    this.code = code;
+    this.status = status;
+  }
+}
+
 function shouldAttachJsonContentType(init?: RequestInit) {
   if (!init?.body) {
     return false;
@@ -37,9 +54,28 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers,
   });
 
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+  let payload: ApiResponse<T> | null = null;
+  try {
+    payload = (await response.json()) as ApiResponse<T>;
+  } catch {
+    payload = null;
   }
 
-  return response.json() as Promise<T>;
+  if (!response.ok) {
+    throw new ApiError(
+      payload?.message ?? `请求失败: ${response.status}`,
+      payload?.code ?? response.status,
+      response.status,
+    );
+  }
+
+  if (!payload) {
+    throw new ApiError("接口返回为空", 500, response.status);
+  }
+
+  if (payload.code !== 0) {
+    throw new ApiError(payload.message, payload.code, response.status);
+  }
+
+  return payload.data;
 }

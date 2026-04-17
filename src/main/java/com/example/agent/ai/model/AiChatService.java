@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 @Service
 public class AiChatService {
@@ -29,6 +30,18 @@ public class AiChatService {
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId.toString()))
                 .user(userMessage)
                 .call()
+                .content();
+        } catch (Exception exception) {
+            throw new BizException(500, "模型调用失败: " + exception.getMessage());
+        }
+    }
+
+    public Flux<String> streamChat(Long conversationId, String userMessage) {
+        try {
+            return chatClient.prompt()
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId.toString()))
+                .user(userMessage)
+                .stream()
                 .content();
         } catch (Exception exception) {
             throw new BizException(500, "模型调用失败: " + exception.getMessage());
