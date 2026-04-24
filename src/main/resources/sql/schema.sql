@@ -55,7 +55,6 @@ CREATE TABLE IF NOT EXISTS `ai_conversation_message` (
   `user_id` BIGINT(20) NOT NULL COMMENT '所属用户ID',
   `role` VARCHAR(32) NOT NULL COMMENT '角色:user/assistant/system',
   `content` LONGTEXT NOT NULL COMMENT '消息内容',
-  `token_usage` INT(11) DEFAULT NULL COMMENT 'token消耗',
   `status` VARCHAR(32) NOT NULL DEFAULT 'SUCCESS' COMMENT '状态',
   `deleted` bit(1) NOT NULL DEFAULT 0 COMMENT '是否删除:true是,false否',
   `created_at` DATETIME NOT NULL COMMENT '创建时间',
@@ -64,6 +63,29 @@ CREATE TABLE IF NOT EXISTS `ai_conversation_message` (
   KEY `idx_message_conversation_id` (`conversation_id`),
   KEY `idx_message_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI消息表';
+
+CREATE TABLE IF NOT EXISTS `ai_llm_call_log` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `conversation_id` BIGINT(20) DEFAULT NULL COMMENT '会话ID',
+  `user_id` BIGINT(20) DEFAULT NULL COMMENT '用户ID',
+  `thread_id` VARCHAR(64) DEFAULT NULL COMMENT 'Agent线程ID',
+  `agent_name` VARCHAR(64) NOT NULL COMMENT 'Agent名称',
+  `round_no` INT(11) NOT NULL DEFAULT 1 COMMENT '会话内模型调用轮次',
+  `status` VARCHAR(32) NOT NULL COMMENT '状态:PENDING/SUCCESS/ERROR',
+  `request_payload_json` LONGTEXT NOT NULL COMMENT '请求载荷JSON',
+  `response_payload_json` LONGTEXT DEFAULT NULL COMMENT '响应载荷JSON',
+  `prompt_tokens` INT(11) DEFAULT NULL COMMENT '提示词tokens',
+  `completion_tokens` INT(11) DEFAULT NULL COMMENT '输出tokens',
+  `total_tokens` INT(11) DEFAULT NULL COMMENT '总tokens',
+  `error_message` LONGTEXT DEFAULT NULL COMMENT '错误信息',
+  `deleted` bit(1) NOT NULL DEFAULT 0 COMMENT '是否删除:true是,false否',
+  `created_at` DATETIME NOT NULL COMMENT '创建时间',
+  `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_llm_call_conversation_id` (`conversation_id`),
+  KEY `idx_llm_call_user_id` (`user_id`),
+  KEY `idx_llm_call_thread_id` (`thread_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='LLM调用日志表';
 
 CREATE TABLE IF NOT EXISTS `sys_user_session` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',

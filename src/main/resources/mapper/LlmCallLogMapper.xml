@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.agent.mapper.LlmCallLogMapper">
+
+    <resultMap id="LlmCallLogResultMap" type="com.example.agent.model.entity.LlmCallLogEntity">
+        <id property="id" column="id"/>
+        <result property="conversationId" column="conversation_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="threadId" column="thread_id"/>
+        <result property="agentName" column="agent_name"/>
+        <result property="roundNo" column="round_no"/>
+        <result property="status" column="status"/>
+        <result property="requestPayloadJson" column="request_payload_json"/>
+        <result property="responsePayloadJson" column="response_payload_json"/>
+        <result property="promptTokens" column="prompt_tokens"/>
+        <result property="completionTokens" column="completion_tokens"/>
+        <result property="totalTokens" column="total_tokens"/>
+        <result property="errorMessage" column="error_message"/>
+        <result property="deleted" column="deleted"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.agent.model.entity.LlmCallLogEntity" useGeneratedKeys="true" keyProperty="id">
+        insert into ai_llm_call_log(
+            conversation_id,
+            user_id,
+            thread_id,
+            agent_name,
+            round_no,
+            status,
+            request_payload_json,
+            response_payload_json,
+            prompt_tokens,
+            completion_tokens,
+            total_tokens,
+            error_message,
+            deleted,
+            created_at,
+            updated_at
+        ) values (
+            #{conversationId},
+            #{userId},
+            #{threadId},
+            #{agentName},
+            #{roundNo},
+            #{status},
+            #{requestPayloadJson},
+            #{responsePayloadJson},
+            #{promptTokens},
+            #{completionTokens},
+            #{totalTokens},
+            #{errorMessage},
+            #{deleted},
+            now(),
+            now()
+        )
+    </insert>
+
+    <select id="findMaxRoundNoByConversationId" resultType="java.lang.Integer">
+        select max(round_no)
+        from ai_llm_call_log
+        where conversation_id = #{conversationId} and deleted = 0
+    </select>
+
+    <update id="updateSuccess" parameterType="com.example.agent.model.entity.LlmCallLogEntity">
+        update ai_llm_call_log
+        set status = #{status},
+            response_payload_json = #{responsePayloadJson},
+            prompt_tokens = #{promptTokens},
+            completion_tokens = #{completionTokens},
+            total_tokens = #{totalTokens},
+            error_message = #{errorMessage},
+            updated_at = now()
+        where id = #{id} and deleted = 0
+    </update>
+
+    <update id="updateError">
+        update ai_llm_call_log
+        set status = 'ERROR',
+            error_message = #{errorMessage},
+            updated_at = now()
+        where id = #{id} and deleted = 0
+    </update>
+
+</mapper>

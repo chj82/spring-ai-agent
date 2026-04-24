@@ -1,6 +1,5 @@
 package com.example.agent.service.app;
 
-import com.example.agent.ai.memory.OfficialChatMemoryService;
 import com.example.agent.common.exception.BizException;
 import com.example.agent.mapper.ConversationMapper;
 import com.example.agent.mapper.ConversationMessageMapper;
@@ -19,16 +18,13 @@ public class ConversationService {
 
     private final ConversationMapper conversationMapper;
     private final ConversationMessageMapper conversationMessageMapper;
-    private final OfficialChatMemoryService officialChatMemoryService;
 
     public ConversationService(
         ConversationMapper conversationMapper,
-        ConversationMessageMapper conversationMessageMapper,
-        OfficialChatMemoryService officialChatMemoryService
+        ConversationMessageMapper conversationMessageMapper
     ) {
         this.conversationMapper = conversationMapper;
         this.conversationMessageMapper = conversationMessageMapper;
-        this.officialChatMemoryService = officialChatMemoryService;
     }
 
     public List<ConversationVO> list(Long userId) {
@@ -65,7 +61,6 @@ public class ConversationService {
     public void delete(Long userId, Long conversationId) {
         requireConversation(userId, conversationId);
         conversationMapper.softDelete(conversationId, userId);
-        officialChatMemoryService.clear(conversationId);
     }
 
     public void delete(Long userId, ConversationIdRequest request) {
@@ -105,7 +100,6 @@ public class ConversationService {
         vo.setId(entity.getId());
         vo.setRole(entity.getRole());
         vo.setContent(entity.getContent());
-        vo.setTokenUsage(entity.getTokenUsage());
         vo.setStatus(entity.getStatus());
         vo.setCreatedAt(entity.getCreatedAt());
         return vo;
